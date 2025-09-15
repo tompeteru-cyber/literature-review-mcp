@@ -14,9 +14,9 @@ import path from 'path';
 import fs from 'fs/promises';
 
 // Configuration
-const MCP_SERVER_PATH = path.join(__dirname, '../dist/index.js');
-const OUTPUT_DIR = path.join(__dirname, '../outputs');
-const PDF_DIR = path.join(__dirname, '../pdfs');
+const MCP_SERVER_PATH = path.join(__dirname, '../../dist/index.js');
+const OUTPUT_DIR = path.join(__dirname, '../../outputs');
+const PDF_DIR = path.join(__dirname, '../../pdfs');
 
 class LiteratureReviewClient {
   private client: Client;
@@ -47,8 +47,8 @@ class LiteratureReviewClient {
     });
 
     this.transport = new StdioClientTransport({
-      reader: serverProcess.stdout,
-      writer: serverProcess.stdin
+      command: 'node',
+      args: [MCP_SERVER_PATH]
     });
 
     await this.client.connect(this.transport);

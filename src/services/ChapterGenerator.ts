@@ -1,6 +1,6 @@
-import { Paper } from './TierFilteringSystem.js';
-import { ResearchGap } from './ResearchGapAnalyzer.js';
-import { SynthesisResult } from './KnowledgeSynthesizer.js';
+import { Paper } from './TierFilteringSystem';
+import { ResearchGap } from './ResearchGapAnalyzer';
+import { SynthesisResult } from './KnowledgeSynthesizer';
 import fs from 'fs/promises';
 import path from 'path';
 

@@ -1,5 +1,5 @@
 import natural from 'natural';
-import { Paper } from './TierFilteringSystem.js';
+import { Paper } from './TierFilteringSystem';
 
 export interface ResearchGap {
   type: 'theoretical' | 'methodological' | 'practical';

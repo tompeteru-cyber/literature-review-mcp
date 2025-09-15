@@ -1,5 +1,5 @@
-import { Paper } from './TierFilteringSystem.js';
-import { DatabaseManager } from './DatabaseManager.js';
+import { Paper } from './TierFilteringSystem';
+import { DatabaseManager } from './DatabaseManager';
 export interface SearchResult {
     database: string;
     query: string;

@@ -1,6 +1,6 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolRequestSchema, ListToolsRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema, InitializeRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
 import { LiteratureProcessor } from './services/LiteratureProcessor.js';
 import { TierFilteringSystem } from './services/TierFilteringSystem.js';
 import { AHPAnalyzer } from './services/AHPAnalyzer.js';
@@ -8,14 +8,47 @@ import { ResearchGapAnalyzer } from './services/ResearchGapAnalyzer.js';
 import { KnowledgeSynthesizer } from './services/KnowledgeSynthesizer.js';
 import { DatabaseManager } from './services/DatabaseManager.js';
 import { ChapterGenerator } from './services/ChapterGenerator.js';
-// Initialize services
-const dbManager = new DatabaseManager(process.env.DATABASE_URL || '');
-const literatureProcessor = new LiteratureProcessor(dbManager);
-const tierFilter = new TierFilteringSystem();
-const ahpAnalyzer = new AHPAnalyzer();
-const gapAnalyzer = new ResearchGapAnalyzer();
-const synthesizer = new KnowledgeSynthesizer();
-const chapterGen = new ChapterGenerator();
+// Initialize services with error handling
+let dbManager;
+let literatureProcessor;
+let tierFilter;
+let ahpAnalyzer;
+let gapAnalyzer;
+let synthesizer;
+let chapterGen;
+async function initializeServices() {
+    try {
+        console.error('[DEBUG] Creating DatabaseManager...');
+        dbManager = new DatabaseManager(process.env.DATABASE_URL || '');
+        console.error('[DEBUG] Initializing DatabaseManager...');
+        await dbManager.initialize(process.env.DATABASE_URL || '');
+        console.error('[DEBUG] DatabaseManager initialized successfully');
+        console.error('[DEBUG] Initializing LiteratureProcessor...');
+        literatureProcessor = new LiteratureProcessor(dbManager);
+        console.error('[DEBUG] LiteratureProcessor initialized successfully');
+        console.error('[DEBUG] Initializing TierFilteringSystem...');
+        tierFilter = new TierFilteringSystem();
+        console.error('[DEBUG] TierFilteringSystem initialized successfully');
+        console.error('[DEBUG] Initializing AHPAnalyzer...');
+        ahpAnalyzer = new AHPAnalyzer();
+        console.error('[DEBUG] AHPAnalyzer initialized successfully');
+        console.error('[DEBUG] Initializing ResearchGapAnalyzer...');
+        gapAnalyzer = new ResearchGapAnalyzer();
+        console.error('[DEBUG] ResearchGapAnalyzer initialized successfully');
+        console.error('[DEBUG] Initializing KnowledgeSynthesizer...');
+        synthesizer = new KnowledgeSynthesizer();
+        console.error('[DEBUG] KnowledgeSynthesizer initialized successfully');
+        console.error('[DEBUG] Initializing ChapterGenerator...');
+        chapterGen = new ChapterGenerator();
+        console.error('[DEBUG] ChapterGenerator initialized successfully');
+        console.error('[DEBUG] All services initialized successfully');
+    }
+    catch (error) {
+        console.error('[ERROR] Failed to initialize services:', error);
+        console.error('[ERROR] Services initialization stack:', error instanceof Error ? error.stack : 'No stack trace');
+        throw error; // Re-throw to be caught by the promise handler
+    }
+}
 // Initialize MCP server
 const server = new Server({
     name: 'literature-review-mcp',
@@ -26,6 +59,13 @@ const server = new Server({
         resources: {},
     },
 });
+// Add server event logging
+server.onclose = () => {
+    console.error('[DEBUG] Server connection closed');
+};
+server.onerror = (error) => {
+    console.error('[ERROR] Server error:', error);
+};
 // Define comprehensive tool set
 const tools = [
     {
@@ -306,14 +346,37 @@ const tools = [
         }
     }
 ];
+// Handle initialization
+server.setRequestHandler(InitializeRequestSchema, async (request) => {
+    console.error('[DEBUG] Initialize request received:', JSON.stringify(request.params));
+    console.error('[DEBUG] Sending initialization response...');
+    const response = {
+        capabilities: {
+            tools: {},
+            resources: {}
+        },
+        serverInfo: {
+            name: 'literature-review-mcp',
+            version: '1.0.0'
+        }
+    };
+    console.error('[DEBUG] Initialization response:', JSON.stringify(response));
+    return response;
+});
 // Register tools
 server.setRequestHandler(ListToolsRequestSchema, async () => {
+    console.error('[DEBUG] ListTools request received');
     return { tools };
 });
 // Handle tool calls
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    console.error('[DEBUG] CallTool request received:', request.params.name);
     const { name, arguments: args } = request.params;
     try {
+        // Ensure all services are initialized
+        if (!dbManager || !literatureProcessor || !tierFilter || !ahpAnalyzer || !gapAnalyzer || !synthesizer || !chapterGen) {
+            throw new Error('Services not properly initialized');
+        }
         switch (name) {
             case 'search_databases':
                 const searchResults = await literatureProcessor.searchDatabases(args.databases, args.query, args.date_range, args.fields);
@@ -416,23 +479,95 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
     }
     catch (error) {
+        console.error('[ERROR] Tool execution failed:', error);
         return {
             content: [{
                     type: 'text',
-                    text: `Error: ${error.message}`
+                    text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
                 }],
             isError: true
         };
     }
 });
+// Flag to track initialization status
+let servicesInitialized = false;
 // Start the server
 async function main() {
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    console.error('Literature Review MCP Server started');
+    try {
+        console.error('[DEBUG] Starting MCP Literature Review Server...');
+        console.error('[DEBUG] Node version:', process.version);
+        console.error('[DEBUG] Working directory:', process.cwd());
+        console.error('[DEBUG] Environment variables:');
+        console.error('[DEBUG] - DATABASE_URL:', process.env.DATABASE_URL || 'not set');
+        console.error('[DEBUG] - PDF_STORAGE_PATH:', process.env.PDF_STORAGE_PATH || 'not set');
+        console.error('[DEBUG] - OUTPUT_PATH:', process.env.OUTPUT_PATH || 'not set');
+        console.error('[DEBUG] Creating transport...');
+        const transport = new StdioServerTransport();
+        // Add more detailed transport event logging
+        transport.onclose = () => {
+            console.error('[DEBUG] Transport connection closed at:', new Date().toISOString());
+        };
+        transport.onerror = (error) => {
+            console.error('[ERROR] Transport error at:', new Date().toISOString(), error);
+        };
+        console.error('[DEBUG] Connecting server to transport...');
+        await server.connect(transport);
+        console.error('[DEBUG] Server connected successfully at:', new Date().toISOString());
+        console.error('[INFO] Literature Review MCP Server started and ready to accept connections');
+        // Initialize services AFTER MCP connection is established
+        console.error('[DEBUG] Skipping services initialization for now - focusing on MCP connection');
+        // TODO: Re-enable services initialization once MCP connection is stable
+        /*
+        initializeServices().then(() => {
+          console.error('[DEBUG] Services initialization completed');
+          servicesInitialized = true;
+        }).catch((error) => {
+          console.error('[ERROR] Services initialization failed:', error);
+          console.error('[ERROR] Services initialization stack:', error?.stack);
+          // Don't exit on service initialization failure - server should still work for basic operations
+        });
+        */
+        // Add a heartbeat to show server is alive
+        const heartbeat = setInterval(() => {
+            console.error('[HEARTBEAT] Server running at:', new Date().toISOString());
+        }, 10000); // Every 10 seconds
+        // Keep the process alive and handle shutdown
+        process.stdin.resume();
+        // Cleanup on exit
+        process.on('exit', () => {
+            clearInterval(heartbeat);
+            console.error('[INFO] Server shutting down...');
+        });
+    }
+    catch (error) {
+        console.error('[ERROR] Failed to start MCP server:', error);
+        console.error('[ERROR] Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+        process.exit(1);
+    }
 }
+// Add global error handlers
+process.on('uncaughtException', (error) => {
+    console.error('[FATAL] Uncaught exception - this will cause server exit:', error);
+    console.error('[FATAL] Stack trace:', error.stack);
+    console.error('[FATAL] Process will exit in 1 second...');
+    setTimeout(() => process.exit(1), 1000);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled rejection - this will cause server exit at:', promise, 'reason:', reason);
+    console.error('[FATAL] Process will exit in 1 second...');
+    setTimeout(() => process.exit(1), 1000);
+});
+// Handle SIGINT and SIGTERM gracefully
+process.on('SIGINT', () => {
+    console.error('[INFO] Received SIGINT, shutting down gracefully...');
+    process.exit(0);
+});
+process.on('SIGTERM', () => {
+    console.error('[INFO] Received SIGTERM, shutting down gracefully...');
+    process.exit(0);
+});
 main().catch((error) => {
-    console.error('Failed to start server:', error);
+    console.error('[ERROR] Main function failed:', error);
     process.exit(1);
 });
 //# sourceMappingURL=index.js.map

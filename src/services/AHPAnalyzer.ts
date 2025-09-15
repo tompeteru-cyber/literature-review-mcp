@@ -1,5 +1,5 @@
 import { create, all } from 'mathjs';
-import { Paper } from './TierFilteringSystem.js';
+import { Paper } from './TierFilteringSystem';
 
 const math = create(all);
 
@@ -98,16 +98,17 @@ export class AHPAnalyzer {
       const normalized = math.divide(newVector, norm);
       
       const diff = math.subtract(normalized, eigenvector);
-      if (math.norm(diff) < tolerance) {
-        eigenvector = normalized;
+      const normValue = Number(math.norm(diff as any));
+      if (normValue < tolerance) {
+        eigenvector = normalized as any;
         break;
       }
-      eigenvector = normalized;
+      eigenvector = normalized as any;
     }
 
     // Convert to weights map
     const weights = new Map<string, number>();
-    const vectorArray = eigenvector.toArray() as number[];
+    const vectorArray = (eigenvector as any).toArray() as number[];
     comparison.criteria.forEach((criterion, index) => {
       weights.set(criterion, vectorArray[index]);
     });
@@ -281,7 +282,7 @@ export class AHPAnalyzer {
 
     // Calculate maximum eigenvalue
     const eigenvalues = math.eigs(matrix).values;
-    const maxEigenvalue = Math.max(...eigenvalues.toArray() as number[]);
+    const maxEigenvalue = Math.max(...(eigenvalues as any).toArray() as number[]);
 
     // Calculate Consistency Index (CI)
     const CI = (maxEigenvalue - n) / (n - 1);

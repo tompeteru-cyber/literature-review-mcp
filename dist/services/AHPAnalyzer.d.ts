@@ -1,4 +1,4 @@
-import { Paper } from './TierFilteringSystem.js';
+import { Paper } from './TierFilteringSystem';
 export interface AHPCriterion {
     name: string;
     weight: number;

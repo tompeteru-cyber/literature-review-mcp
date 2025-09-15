@@ -1,5 +1,5 @@
 import natural from 'natural';
-import { Paper } from './TierFilteringSystem.js';
+import { Paper } from './TierFilteringSystem';
 import { create, all } from 'mathjs';
 
 const math = create(all);

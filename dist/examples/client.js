@@ -11,9 +11,9 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs/promises';
 // Configuration
-const MCP_SERVER_PATH = path.join(__dirname, '../dist/index.js');
-const OUTPUT_DIR = path.join(__dirname, '../outputs');
-const PDF_DIR = path.join(__dirname, '../pdfs');
+const MCP_SERVER_PATH = path.join(__dirname, '../../dist/index.js');
+const OUTPUT_DIR = path.join(__dirname, '../../outputs');
+const PDF_DIR = path.join(__dirname, '../../pdfs');
 class LiteratureReviewClient {
     client;
     transport;
@@ -39,8 +39,8 @@ class LiteratureReviewClient {
             }
         });
         this.transport = new StdioClientTransport({
-            stdin: serverProcess.stdin,
-            stdout: serverProcess.stdout
+            command: 'node',
+            args: [MCP_SERVER_PATH]
         });
         await this.client.connect(this.transport);
         this.connected = true;
@@ -192,8 +192,8 @@ class LiteratureReviewClient {
                     databases: config.databases,
                     search_query: config.searchQuery,
                     date_range: config.dateRange,
-                    tier1_results,
-                    tier2_results,
+                    tier1_results: tier1Results,
+                    tier2_results: tier2Results,
                     ahp_results: ahpResults,
                     research_gaps: gaps,
                     synthesis_results: synthesis,

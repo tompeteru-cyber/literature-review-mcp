@@ -13,7 +13,8 @@ export declare class DatabaseManager {
     private useSupabase;
     private dbPath;
     constructor(connectionString?: string);
-    private initialize;
+    private findProjectDirectory;
+    initialize(connectionString?: string): Promise<void>;
     private initializeSQLite;
     private createTables;
     /**

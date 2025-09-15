@@ -50,7 +50,8 @@ export class AHPAnalyzer {
             const norm = math.norm(newVector);
             const normalized = math.divide(newVector, norm);
             const diff = math.subtract(normalized, eigenvector);
-            if (math.norm(diff) < tolerance) {
+            const normValue = Number(math.norm(diff));
+            if (normValue < tolerance) {
                 eigenvector = normalized;
                 break;
             }

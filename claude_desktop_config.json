@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "literature-review": {
+      "command": "node",
+      "args": ["C:\\Users\\Tompe\\OneDrive - University of Strathclyde (1)\\GitHub-Projects\\literature-review-mcp\\dist\\index.js"],
+      "env": {
+        "DATABASE_URL": "sqlite://C:\\Users\\Tompe\\OneDrive - University of Strathclyde (1)\\GitHub-Projects\\literature-review-mcp\\literature_review.db",
+        "PDF_STORAGE_PATH": "C:\\Users\\Tompe\\OneDrive - University of Strathclyde (1)\\PhD Files\\MCP",
+        "OUTPUT_PATH": "C:\\Users\\Tompe\\OneDrive - University of Strathclyde (1)\\PhD Files\\MCP\\outputs"
+      }
+    }
+  }
+}

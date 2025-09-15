@@ -21,35 +21,120 @@ export class DatabaseManager {
 
   constructor(connectionString?: string) {
     this.useSupabase = !!connectionString && connectionString.startsWith('http');
-    this.dbPath = connectionString || path.join(process.cwd(), 'literature_review.db');
-    
-    this.initialize(connectionString);
+
+    // Handle SQLite URL format or use default path
+    if (connectionString && connectionString.startsWith('sqlite://')) {
+      this.dbPath = connectionString.replace('sqlite://', '');
+      // If relative path, make it absolute to the project directory
+      if (!path.isAbsolute(this.dbPath)) {
+        this.dbPath = path.join(this.findProjectDirectory(), this.dbPath);
+      }
+    } else if (connectionString && !connectionString.startsWith('http')) {
+      this.dbPath = connectionString;
+    } else {
+      this.dbPath = path.join(this.findProjectDirectory(), 'literature_review.db');
+    }
+
+    console.error('[DEBUG] Database path:', this.dbPath);
   }
 
-  private async initialize(connectionString?: string) {
+  private findProjectDirectory(): string {
+    // Get the directory where this script is located
+    const currentFile = new URL(import.meta.url).pathname;
+    let dir = path.dirname(currentFile);
+
+    // On Windows, fix the path format
+    if (process.platform === 'win32' && dir.startsWith('/')) {
+      dir = dir.substring(1);
+    }
+
+    // Since we're in dist/services/, go up 2 levels to get to project root
+    if (dir.includes('dist')) {
+      const projectRoot = dir.split('dist')[0];
+      if (projectRoot) {
+        console.error('[DEBUG] Found project directory from dist path:', projectRoot);
+        return projectRoot;
+      }
+    }
+
+    // Go up directories until we find package.json (project root)
+    while (dir && dir !== path.dirname(dir)) {
+      try {
+        const packageJsonPath = path.join(dir, 'package.json');
+        const fs = require('fs');
+        if (fs.existsSync(packageJsonPath)) {
+          console.error('[DEBUG] Found project directory via package.json:', dir);
+          return dir;
+        }
+      } catch (e) {
+        // Continue searching
+      }
+      dir = path.dirname(dir);
+    }
+
+    // Fallback to current working directory
+    console.error('[DEBUG] Could not find project directory, using cwd:', process.cwd());
+    return process.cwd();
+  }
+
+  async initialize(connectionString?: string) {
     if (this.useSupabase && connectionString) {
       // Initialize Supabase for cloud storage
       const supabaseUrl = connectionString;
       const supabaseKey = process.env.SUPABASE_KEY || '';
       this.supabaseClient = createClient(supabaseUrl, supabaseKey);
+      console.error('[DEBUG] Supabase client initialized');
     } else {
       // Initialize SQLite for local storage
+      console.error('[DEBUG] Initializing SQLite at:', this.dbPath);
       await this.initializeSQLite();
     }
   }
 
   private async initializeSQLite() {
-    this.sqliteDb = await open({
-      filename: this.dbPath,
-      driver: sqlite3.Database
-    });
+    try {
+      console.error('[DEBUG] Opening SQLite database...');
+      this.sqliteDb = await open({
+        filename: this.dbPath,
+        driver: sqlite3.Database
+      });
+      console.error('[DEBUG] SQLite database opened successfully');
 
-    // Create tables
-    await this.createTables();
+      // Create tables
+      console.error('[DEBUG] Creating database tables...');
+      await this.createTables();
+      console.error('[DEBUG] Database tables created successfully');
+    } catch (error) {
+      console.error('[ERROR] Failed to initialize SQLite:', error);
+      console.error('[ERROR] Database path was:', this.dbPath);
+
+      // Try to create directory if it doesn't exist
+      const dir = path.dirname(this.dbPath);
+      try {
+        const fs = await import('fs/promises');
+        await fs.mkdir(dir, { recursive: true });
+        console.error('[DEBUG] Created directory:', dir);
+
+        // Retry database creation
+        this.sqliteDb = await open({
+          filename: this.dbPath,
+          driver: sqlite3.Database
+        });
+        console.error('[DEBUG] SQLite database opened after directory creation');
+
+        await this.createTables();
+        console.error('[DEBUG] Database tables created after retry');
+      } catch (retryError) {
+        console.error('[ERROR] Failed to create database after directory creation:', retryError);
+        throw retryError;
+      }
+    }
   }
 
   private async createTables() {
     if (!this.sqliteDb) return;
+
+    console.error('[DEBUG] Starting table creation...');
 
     // Papers table
     await this.sqliteDb.exec(`
@@ -172,15 +257,20 @@ export class DatabaseManager {
       )
     `);
 
-    // Create indexes
-    await this.sqliteDb.exec(`
-      CREATE INDEX IF NOT EXISTS idx_papers_year ON papers(year);
-      CREATE INDEX IF NOT EXISTS idx_papers_citations ON papers(citations);
-      CREATE INDEX IF NOT EXISTS idx_papers_doi ON papers(doi);
-      CREATE INDEX IF NOT EXISTS idx_search_results_date ON search_results(search_date);
-      CREATE INDEX IF NOT EXISTS idx_analyses_type ON analyses(analysis_type);
-      CREATE INDEX IF NOT EXISTS idx_research_gaps_type ON research_gaps(gap_type);
-    `);
+    console.error('[DEBUG] Creating indexes...');
+    // Create indexes one by one to catch specific errors
+    try {
+      await this.sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_papers_year ON papers(year);');
+      await this.sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_papers_citations ON papers(citations);');
+      await this.sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_papers_doi ON papers(doi);');
+      await this.sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_search_results_date ON search_results(search_date);');
+      await this.sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_analyses_type ON analyses(analysis_type);');
+      await this.sqliteDb.exec('CREATE INDEX IF NOT EXISTS idx_research_gaps_type ON research_gaps(gap_type);');
+      console.error('[DEBUG] Indexes created successfully');
+    } catch (error) {
+      console.error('[ERROR] Failed to create indexes:', error);
+      throw error;
+    }
   }
 
   /**

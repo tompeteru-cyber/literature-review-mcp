@@ -1,4 +1,4 @@
-import { Paper } from './TierFilteringSystem.js';
+import { Paper } from './TierFilteringSystem';
 export interface SynthesisResult {
     synthesis_type: string;
     themes: Map<string, ThemeAnalysis>;
