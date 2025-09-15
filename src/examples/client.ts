@@ -47,8 +47,8 @@ class LiteratureReviewClient {
     });
 
     this.transport = new StdioClientTransport({
-      stdin: serverProcess.stdin,
-      stdout: serverProcess.stdout
+      reader: serverProcess.stdout,
+      writer: serverProcess.stdin
     });
 
     await this.client.connect(this.transport);
@@ -223,8 +223,8 @@ class LiteratureReviewClient {
           databases: config.databases,
           search_query: config.searchQuery,
           date_range: config.dateRange,
-          tier1_results,
-          tier2_results,
+          tier1_results: tier1Results,
+          tier2_results: tier2Results,
           ahp_results: ahpResults,
           research_gaps: gaps,
           synthesis_results: synthesis,
