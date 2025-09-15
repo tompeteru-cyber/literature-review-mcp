@@ -1,72 +1,33 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, InitializeRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
-import { LiteratureProcessor } from './services/LiteratureProcessor.js';
-import { TierFilteringSystem } from './services/TierFilteringSystem.js';
-import { AHPAnalyzer } from './services/AHPAnalyzer.js';
-import { ResearchGapAnalyzer } from './services/ResearchGapAnalyzer.js';
-import { KnowledgeSynthesizer } from './services/KnowledgeSynthesizer.js';
-import { DatabaseManager } from './services/DatabaseManager.js';
-import { ChapterGenerator } from './services/ChapterGenerator.js';
-// Initialize services with error handling
-let dbManager;
-let literatureProcessor;
-let tierFilter;
-let ahpAnalyzer;
-let gapAnalyzer;
-let synthesizer;
-let chapterGen;
-async function initializeServices() {
-    try {
-        console.error('[DEBUG] Creating DatabaseManager...');
-        dbManager = new DatabaseManager(process.env.DATABASE_URL || '');
-        console.error('[DEBUG] Initializing DatabaseManager...');
-        await dbManager.initialize(process.env.DATABASE_URL || '');
-        console.error('[DEBUG] DatabaseManager initialized successfully');
-        console.error('[DEBUG] Initializing LiteratureProcessor...');
-        literatureProcessor = new LiteratureProcessor(dbManager);
-        console.error('[DEBUG] LiteratureProcessor initialized successfully');
-        console.error('[DEBUG] Initializing TierFilteringSystem...');
-        tierFilter = new TierFilteringSystem();
-        console.error('[DEBUG] TierFilteringSystem initialized successfully');
-        console.error('[DEBUG] Initializing AHPAnalyzer...');
-        ahpAnalyzer = new AHPAnalyzer();
-        console.error('[DEBUG] AHPAnalyzer initialized successfully');
-        console.error('[DEBUG] Initializing ResearchGapAnalyzer...');
-        gapAnalyzer = new ResearchGapAnalyzer();
-        console.error('[DEBUG] ResearchGapAnalyzer initialized successfully');
-        console.error('[DEBUG] Initializing KnowledgeSynthesizer...');
-        synthesizer = new KnowledgeSynthesizer();
-        console.error('[DEBUG] KnowledgeSynthesizer initialized successfully');
-        console.error('[DEBUG] Initializing ChapterGenerator...');
-        chapterGen = new ChapterGenerator();
-        console.error('[DEBUG] ChapterGenerator initialized successfully');
-        console.error('[DEBUG] All services initialized successfully');
-    }
-    catch (error) {
-        console.error('[ERROR] Failed to initialize services:', error);
-        console.error('[ERROR] Services initialization stack:', error instanceof Error ? error.stack : 'No stack trace');
-        throw error; // Re-throw to be caught by the promise handler
-    }
-}
-// Initialize MCP server
-const server = new Server({
-    name: 'literature-review-mcp',
-    version: '1.0.0',
-}, {
-    capabilities: {
-        tools: {},
-        resources: {},
-    },
+import { OutputManager } from './utils/OutputManager.js';
+import path from 'path';
+// Global error handling
+process.on('uncaughtException', (error) => {
+    console.error('[FATAL] Uncaught exception:', error);
+    console.error('[FATAL] Stack:', error.stack);
+    process.exit(1);
 });
-// Add server event logging
-server.onclose = () => {
-    console.error('[DEBUG] Server connection closed');
-};
-server.onerror = (error) => {
-    console.error('[ERROR] Server error:', error);
-};
-// Define comprehensive tool set
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled rejection at:', promise, 'reason:', reason);
+    process.exit(1);
+});
+console.error('[DEBUG] Starting MCP Literature Review Server...');
+console.error(`[DEBUG] Node version: ${process.version}`);
+console.error(`[DEBUG] Working directory: ${process.cwd()}`);
+console.error('[DEBUG] Environment variables:');
+console.error(`[DEBUG] - DATABASE_URL: ${process.env.DATABASE_URL}`);
+console.error(`[DEBUG] - PDF_STORAGE_PATH: ${process.env.PDF_STORAGE_PATH}`);
+console.error(`[DEBUG] - OUTPUT_PATH: ${process.env.OUTPUT_PATH}`);
+// Initialize OutputManager
+const outputManager = new OutputManager({
+    baseOutputPath: process.env.OUTPUT_PATH || path.join(process.cwd(), 'outputs'),
+    generateTimestamps: true,
+    organizeByType: true
+});
+console.error(`[DEBUG] OutputManager initialized with path: ${process.env.OUTPUT_PATH || path.join(process.cwd(), 'outputs')}`);
+// Define tools array
 const tools = [
     {
         name: 'search_databases',
@@ -335,7 +296,9 @@ const tools = [
         inputSchema: {
             type: 'object',
             properties: {
-                primary_results: { type: 'object' },
+                primary_results: {
+                    type: 'object'
+                },
                 secondary_databases: {
                     type: 'array',
                     items: { type: 'string' }
@@ -346,228 +309,187 @@ const tools = [
         }
     }
 ];
-// Handle initialization
+// Create server with proper capabilities
+const server = new Server({
+    name: 'literature-review',
+    version: '1.0.0',
+}, {
+    capabilities: {
+        tools: {},
+    },
+});
+console.error('[DEBUG] Creating transport...');
+// Handle initialize
 server.setRequestHandler(InitializeRequestSchema, async (request) => {
-    console.error('[DEBUG] Initialize request received:', JSON.stringify(request.params));
+    console.error('[DEBUG] Initialize request received:', JSON.stringify(request));
     console.error('[DEBUG] Sending initialization response...');
     const response = {
         capabilities: {
             tools: {},
-            resources: {}
         },
         serverInfo: {
-            name: 'literature-review-mcp',
+            name: 'literature-review',
             version: '1.0.0'
         }
     };
     console.error('[DEBUG] Initialization response:', JSON.stringify(response));
+    console.error('[DEBUG] About to return initialization response...');
     return response;
 });
-// Register tools
+// Handle tools/list
 server.setRequestHandler(ListToolsRequestSchema, async () => {
     console.error('[DEBUG] ListTools request received');
+    console.error(`[DEBUG] About to return tools list with ${tools.length} tools`);
+    console.error(`[DEBUG] Tools response: ${JSON.stringify({ tools }).substring(0, 200)}...`);
     return { tools };
 });
 // Handle tool calls
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    console.error('[DEBUG] CallTool request received:', request.params.name);
-    const { name, arguments: args } = request.params;
     try {
-        // Ensure all services are initialized
-        if (!dbManager || !literatureProcessor || !tierFilter || !ahpAnalyzer || !gapAnalyzer || !synthesizer || !chapterGen) {
-            throw new Error('Services not properly initialized');
+        console.error(`[DEBUG] Tool call request: ${request.params.name}`);
+        const { name, arguments: args } = request.params;
+        // Validate tool exists
+        const tool = tools.find(t => t.name === name);
+        if (!tool) {
+            throw new Error(`Unknown tool: ${name}`);
         }
-        switch (name) {
-            case 'search_databases':
-                const searchResults = await literatureProcessor.searchDatabases(args.databases, args.query, args.date_range, args.fields);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(searchResults, null, 2)
-                        }]
-                };
-            case 'tier1_filtering':
-                const tier1Results = await tierFilter.applyTier1(args.papers, args.criteria);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(tier1Results, null, 2)
-                        }]
-                };
-            case 'tier2_analysis':
-                const tier2Results = await tierFilter.applyTier2(args.papers, args.relevance_weights, args.semantic_analysis);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(tier2Results, null, 2)
-                        }]
-                };
-            case 'tier3_ahp':
-                const ahpResults = await ahpAnalyzer.performAHP(args.papers, args.criteria, args.pairwise_comparisons);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(ahpResults, null, 2)
-                        }]
-                };
-            case 'extract_methodologies':
-                const methodologies = await literatureProcessor.extractMethodologies(args.paper_paths, args.extraction_depth);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(methodologies, null, 2)
-                        }]
-                };
-            case 'identify_research_gaps':
-                const gaps = await gapAnalyzer.identifyGaps(args.analyzed_papers, args.gap_types || ['all'], args.domain_context);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(gaps, null, 2)
-                        }]
-                };
-            case 'synthesize_knowledge':
-                const synthesis = await synthesizer.synthesize(args.papers, args.themes, args.synthesis_type);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(synthesis, null, 2)
-                        }]
-                };
-            case 'generate_chapter':
-                const chapter = await chapterGen.generateChapter(args.analysis_results, args.chapter_sections, args.format || 'markdown', args.citation_style || 'APA');
-                return {
-                    content: [{
-                            type: 'text',
-                            text: chapter
-                        }]
-                };
-            case 'validate_methodology':
-                const validation = await literatureProcessor.validateMethodology(args.methodology, args.validation_criteria);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(validation, null, 2)
-                        }]
-                };
-            case 'analyze_citations':
-                const citationAnalysis = await literatureProcessor.analyzeCitations(args.papers, args.analysis_type, args.visualize);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(citationAnalysis, null, 2)
-                        }]
-                };
-            case 'trend_analysis':
-                const trends = await synthesizer.analyzeTrends(args.papers, args.time_period, args.trend_metrics);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(trends, null, 2)
-                        }]
-                };
-            case 'cross_reference_databases':
-                const crossRef = await literatureProcessor.crossReference(args.primary_results, args.secondary_databases, args.deduplication);
-                return {
-                    content: [{
-                            type: 'text',
-                            text: JSON.stringify(crossRef, null, 2)
-                        }]
-                };
-            default:
-                throw new Error(`Unknown tool: ${name}`);
+        console.error(`[DEBUG] Executing tool: ${name} with args:`, JSON.stringify(args));
+        // Generate mock data and save to organized output structure
+        const mockResult = {
+            tool: name,
+            description: tool.description,
+            arguments: args,
+            timestamp: new Date().toISOString(),
+            status: 'success',
+            mockData: generateMockData(name, args)
+        };
+        // Save result to appropriate output directory
+        let savedFilePath;
+        try {
+            savedFilePath = await saveToolResult(name, mockResult);
         }
+        catch (saveError) {
+            console.error(`[ERROR] Failed to save tool result:`, saveError);
+            savedFilePath = 'Failed to save result';
+        }
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `✅ Tool "${name}" executed successfully!\n\n**Description:** ${tool.description}\n\n**Arguments received:**\n\`\`\`json\n${JSON.stringify(args, null, 2)}\n\`\`\`\n\n**Result saved to:** ${savedFilePath}\n\n**Mock Result Preview:**\n\`\`\`json\n${JSON.stringify(mockResult.mockData, null, 2).slice(0, 500)}${JSON.stringify(mockResult.mockData, null, 2).length > 500 ? '...\n```\n\n*Full results saved to file*' : '\n```'}\n\n📝 **Note:** This is a mock implementation. Full functionality will be added progressively.`
+                }
+            ]
+        };
     }
     catch (error) {
-        console.error('[ERROR] Tool execution failed:', error);
+        console.error(`[ERROR] Tool execution failed:`, error);
         return {
-            content: [{
+            content: [
+                {
                     type: 'text',
-                    text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`
-                }],
+                    text: `❌ Error executing tool: ${error instanceof Error ? error.message : 'Unknown error'}`
+                }
+            ],
             isError: true
         };
     }
 });
-// Flag to track initialization status
-let servicesInitialized = false;
-// Start the server
+// Helper function to generate mock data based on tool type
+function generateMockData(toolName, args) {
+    switch (toolName) {
+        case 'search_databases':
+            return {
+                databases: args.databases,
+                query: args.query,
+                totalResults: Math.floor(Math.random() * 1000) + 50,
+                papers: Array.from({ length: 10 }, (_, i) => ({
+                    id: `paper_${i + 1}`,
+                    title: `Mock Paper ${i + 1} related to "${args.query}"`,
+                    authors: [`Author ${i + 1}`, `Co-Author ${i + 1}`],
+                    year: 2020 + Math.floor(Math.random() * 5),
+                    citations: Math.floor(Math.random() * 100),
+                    abstract: `This is a mock abstract for paper ${i + 1} related to the search query.`
+                }))
+            };
+        case 'tier1_filtering':
+            return {
+                originalCount: Array.isArray(args.papers) ? args.papers.length : 100,
+                filteredCount: Math.floor((Array.isArray(args.papers) ? args.papers.length : 100) * 0.7),
+                criteria: args.criteria,
+                filteredPapers: Array.from({ length: 7 }, (_, i) => ({
+                    id: `filtered_paper_${i + 1}`,
+                    title: `Filtered Paper ${i + 1}`,
+                    relevanceScore: 0.8 + Math.random() * 0.2
+                }))
+            };
+        case 'tier2_analysis':
+            return {
+                analysisType: 'Advanced Relevance Analysis',
+                papers: Array.from({ length: 5 }, (_, i) => ({
+                    id: `analyzed_paper_${i + 1}`,
+                    relevanceScore: 0.8 + Math.random() * 0.2,
+                    semanticScore: 0.7 + Math.random() * 0.3,
+                    methodologyScore: 0.6 + Math.random() * 0.4
+                }))
+            };
+        case 'generate_chapter':
+            return {
+                chapterTitle: 'Literature Review Chapter',
+                sections: ['Introduction', 'Methodology', 'Findings', 'Conclusion'],
+                wordCount: 2500,
+                citations: 45,
+                format: args.format || 'markdown'
+            };
+        default:
+            return {
+                message: `Mock data for ${toolName}`,
+                arguments: args,
+                timestamp: new Date().toISOString()
+            };
+    }
+}
+// Helper function to save tool results to organized output
+async function saveToolResult(toolName, result) {
+    switch (toolName) {
+        case 'search_databases':
+            return await outputManager.saveSearchResults(result.arguments.databases?.[0] || 'multi-database', result.arguments.query || 'unknown-query', result.mockData);
+        case 'tier1_filtering':
+        case 'tier2_analysis':
+        case 'tier3_ahp':
+            return await outputManager.saveAnalysis(toolName.replace(/_/g, ' '), result.mockData);
+        case 'generate_chapter':
+            return await outputManager.saveChapter(result.mockData, result.arguments.format || 'markdown');
+        case 'extract_methodologies':
+            return await outputManager.saveMethodologies(result.mockData);
+        case 'analyze_citations':
+            return await outputManager.saveCitationAnalysis(result.arguments.analysis_type || 'general', result.mockData);
+        case 'trend_analysis':
+            return await outputManager.saveTrendAnalysis(result.mockData);
+        default:
+            return await outputManager.saveReport(toolName.replace(/_/g, ' '), result, 'json');
+    }
+}
 async function main() {
     try {
-        console.error('[DEBUG] Starting MCP Literature Review Server...');
-        console.error('[DEBUG] Node version:', process.version);
-        console.error('[DEBUG] Working directory:', process.cwd());
-        console.error('[DEBUG] Environment variables:');
-        console.error('[DEBUG] - DATABASE_URL:', process.env.DATABASE_URL || 'not set');
-        console.error('[DEBUG] - PDF_STORAGE_PATH:', process.env.PDF_STORAGE_PATH || 'not set');
-        console.error('[DEBUG] - OUTPUT_PATH:', process.env.OUTPUT_PATH || 'not set');
         console.error('[DEBUG] Creating transport...');
         const transport = new StdioServerTransport();
-        // Add more detailed transport event logging
-        transport.onclose = () => {
-            console.error('[DEBUG] Transport connection closed at:', new Date().toISOString());
-        };
-        transport.onerror = (error) => {
-            console.error('[ERROR] Transport error at:', new Date().toISOString(), error);
-        };
+        console.error('[DEBUG] Transport created');
         console.error('[DEBUG] Connecting server to transport...');
         await server.connect(transport);
-        console.error('[DEBUG] Server connected successfully at:', new Date().toISOString());
+        console.error(`[DEBUG] Server connected successfully at: ${new Date().toISOString()}`);
         console.error('[INFO] Literature Review MCP Server started and ready to accept connections');
-        // Initialize services AFTER MCP connection is established
+        // Keep the process alive but don't initialize heavy services yet
         console.error('[DEBUG] Skipping services initialization for now - focusing on MCP connection');
-        // TODO: Re-enable services initialization once MCP connection is stable
-        /*
-        initializeServices().then(() => {
-          console.error('[DEBUG] Services initialization completed');
-          servicesInitialized = true;
-        }).catch((error) => {
-          console.error('[ERROR] Services initialization failed:', error);
-          console.error('[ERROR] Services initialization stack:', error?.stack);
-          // Don't exit on service initialization failure - server should still work for basic operations
-        });
-        */
-        // Add a heartbeat to show server is alive
-        const heartbeat = setInterval(() => {
-            console.error('[HEARTBEAT] Server running at:', new Date().toISOString());
-        }, 10000); // Every 10 seconds
-        // Keep the process alive and handle shutdown
-        process.stdin.resume();
-        // Cleanup on exit
-        process.on('exit', () => {
-            clearInterval(heartbeat);
-            console.error('[INFO] Server shutting down...');
-        });
     }
     catch (error) {
-        console.error('[ERROR] Failed to start MCP server:', error);
-        console.error('[ERROR] Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+        console.error('[ERROR] Failed to start server:', error);
+        console.error('[ERROR] Stack:', error.stack);
         process.exit(1);
     }
 }
-// Add global error handlers
-process.on('uncaughtException', (error) => {
-    console.error('[FATAL] Uncaught exception - this will cause server exit:', error);
-    console.error('[FATAL] Stack trace:', error.stack);
-    console.error('[FATAL] Process will exit in 1 second...');
-    setTimeout(() => process.exit(1), 1000);
-});
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('[FATAL] Unhandled rejection - this will cause server exit at:', promise, 'reason:', reason);
-    console.error('[FATAL] Process will exit in 1 second...');
-    setTimeout(() => process.exit(1), 1000);
-});
-// Handle SIGINT and SIGTERM gracefully
-process.on('SIGINT', () => {
-    console.error('[INFO] Received SIGINT, shutting down gracefully...');
-    process.exit(0);
-});
-process.on('SIGTERM', () => {
-    console.error('[INFO] Received SIGTERM, shutting down gracefully...');
-    process.exit(0);
-});
 main().catch((error) => {
-    console.error('[ERROR] Main function failed:', error);
+    console.error('[FATAL] Main function failed:', error);
+    console.error('[FATAL] Stack:', error.stack);
     process.exit(1);
 });
 //# sourceMappingURL=index.js.map
