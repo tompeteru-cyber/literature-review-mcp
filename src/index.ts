@@ -362,7 +362,7 @@ const tools: Tool[] = [
   },
   {
     name: 'generate_paper_summary',
-    description: 'Generate structured PowerPoint-style summary from academic paper with evidence, methods, limitations, and findings',
+    description: 'Generate structured summary from academic paper capturing unique methodologies, evidence, limitations, and findings. IMPORTANT: Accurately describe what THIS specific paper actually does - do not assume papers "combine" methods unless explicitly stated. Each paper has unique contributions.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -377,7 +377,7 @@ const tools: Tool[] = [
         focus_areas: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Specific areas to focus on when extracting information'
+          description: 'Specific areas to focus on when extracting information (e.g., methodology, algorithms, simulation, optimization)'
         },
         output_format: {
           type: 'string',

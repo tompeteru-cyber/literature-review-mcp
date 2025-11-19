@@ -62,6 +62,10 @@ export declare class OutputManager {
     private formatAsRevealJS;
     private formatAsBeamer;
     private formatPaperSummaryAsMarkdown;
+    /**
+     * Format methods section flexibly based on methodology structure
+     */
+    private formatMethodsSection;
     private formatPaperSummaryAsPowerPoint;
     private formatPaperSummaryAsHTML;
     private formatPaperSummaryAsLatex;

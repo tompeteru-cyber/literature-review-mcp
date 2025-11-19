@@ -447,15 +447,7 @@ ${evidence.pageReferences && evidence.pageReferences.length > 0 ?
 
 ## Tools and Key Methods:
 
-${Array.isArray(methods.primary) ? methods.primary.map((method) => `
-- **${method.name}** - ${method.description}
-  ${method.application ? `*Application:* ${method.application}` : ''}
-`).join('\n') : 'No primary methods documented'}
-
-${Array.isArray(methods.secondary) && methods.secondary.length > 0 ? `
-**Supporting Methods:**
-${methods.secondary.map((method) => `- ${method.name}: ${method.description}`).join('\n')}
-` : ''}
+${this.formatMethodsSection(methods)}
 
 ---
 
@@ -467,21 +459,57 @@ ${Array.isArray(limitations) ? limitations.map((limitation) => `- ${limitation}`
 
 ## Preliminary Findings: ${findings.theme || theme}
 
-**Key Findings:**
+**${findings.theme || theme}:**
 
-${Array.isArray(findings.findings) ? findings.findings.map((finding, i) => `${i + 1}. ${finding}`).join('\n') : 'No findings available'}
+${Array.isArray(findings.findings) ? findings.findings.map((finding) => `- ${finding}`).join('\n') : 'No findings available'}
 
 ${findings.metrics ? `
-**Performance Metrics:**
 ${findings.metrics.performanceIndicators ? findings.metrics.performanceIndicators.map((metric) => `- ${metric}`).join('\n') : ''}
 ${findings.metrics.comparisons ? findings.metrics.comparisons.map((comp) => `- ${comp}`).join('\n') : ''}
 ` : ''}
 
 ---
 
-**Generated using Claude Code - Literature Review MCP Server**
-*Generated on: ${new Date().toISOString()}*
+**Generated using Claude Code - Literature Review Analysis**
 `;
+    }
+    /**
+     * Format methods section flexibly based on methodology structure
+     */
+    formatMethodsSection(methods) {
+        if (!methods || ((!methods.primary || methods.primary.length === 0) && (!methods.secondary || methods.secondary.length === 0))) {
+            return 'No methods documented';
+        }
+        let methodsText = '';
+        // Format primary methods - each gets its own bullet with description and application
+        if (Array.isArray(methods.primary) && methods.primary.length > 0) {
+            methodsText += methods.primary.map((method) => {
+                let text = `- **${method.name}**`;
+                if (method.description) {
+                    text += `. ${method.description}`;
+                }
+                if (method.application) {
+                    text += ` ${method.application}`;
+                }
+                return text;
+            }).join('\n\n');
+        }
+        // Format secondary/supporting methods if present
+        if (Array.isArray(methods.secondary) && methods.secondary.length > 0) {
+            if (methodsText)
+                methodsText += '\n\n';
+            methodsText += methods.secondary.map((method) => {
+                let text = `- **${method.name}**`;
+                if (method.description) {
+                    text += `. ${method.description}`;
+                }
+                if (method.application) {
+                    text += ` ${method.application}`;
+                }
+                return text;
+            }).join('\n\n');
+        }
+        return methodsText;
     }
     formatPaperSummaryAsPowerPoint(data, theme) {
         // PowerPoint-compatible markdown format
