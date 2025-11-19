@@ -24,6 +24,14 @@ export declare class OutputManager {
      */
     saveChapter(chapterData: any, format?: 'markdown' | 'latex' | 'html'): Promise<string>;
     /**
+     * Save presentation slides
+     */
+    savePresentation(presentationData: any, format?: 'powerpoint' | 'reveal.js' | 'beamer' | 'google-slides'): Promise<string>;
+    /**
+     * Save paper summary (evidence, methods, limitations, findings)
+     */
+    savePaperSummary(summaryData: any, theme: string, format?: 'markdown' | 'powerpoint' | 'html' | 'latex'): Promise<string>;
+    /**
      * Save search results
      */
     saveSearchResults(database: string, query: string, results: any): Promise<string>;
@@ -49,5 +57,13 @@ export declare class OutputManager {
     private formatAsHTML;
     private formatReportAsMarkdown;
     private formatReportAsHTML;
+    private getPresentationExtension;
+    private formatAsPresentationMarkdown;
+    private formatAsRevealJS;
+    private formatAsBeamer;
+    private formatPaperSummaryAsMarkdown;
+    private formatPaperSummaryAsPowerPoint;
+    private formatPaperSummaryAsHTML;
+    private formatPaperSummaryAsLatex;
 }
 //# sourceMappingURL=OutputManager.d.ts.map

@@ -317,6 +317,86 @@ const tools: Tool[] = [
       },
       required: ['primary_results']
     }
+  },
+  {
+    name: 'generate_presentation',
+    description: 'Generate academic presentation slides from literature review analysis',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        analysis_results: {
+          type: 'object',
+          description: 'Results from literature review analysis'
+        },
+        presentation_type: {
+          type: 'string',
+          enum: ['conference', 'thesis-defense', 'research-proposal', 'progress-update'],
+          description: 'Type of presentation to generate'
+        },
+        duration: {
+          type: 'number',
+          description: 'Presentation duration in minutes'
+        },
+        audience: {
+          type: 'string',
+          enum: ['academic', 'industry', 'mixed', 'students'],
+          description: 'Target audience for the presentation'
+        },
+        format: {
+          type: 'string',
+          enum: ['powerpoint', 'reveal.js', 'beamer', 'google-slides'],
+          description: 'Output format for slides'
+        },
+        sections: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Sections to include in presentation'
+        },
+        include_visuals: {
+          type: 'boolean',
+          description: 'Whether to include charts and visualizations'
+        }
+      },
+      required: ['analysis_results', 'presentation_type']
+    }
+  },
+  {
+    name: 'generate_paper_summary',
+    description: 'Generate structured PowerPoint-style summary from academic paper with evidence, methods, limitations, and findings',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        paper_path: {
+          type: 'string',
+          description: 'Path to the PDF paper file'
+        },
+        theme: {
+          type: 'string',
+          description: 'Research theme/category (e.g., "Spatial Optimisation & Outfitting Constraints")'
+        },
+        focus_areas: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Specific areas to focus on when extracting information'
+        },
+        output_format: {
+          type: 'string',
+          enum: ['markdown', 'powerpoint', 'html', 'latex'],
+          description: 'Output format for the summary'
+        },
+        include_sections: {
+          type: 'object',
+          properties: {
+            evidence: { type: 'boolean' },
+            tools_and_methods: { type: 'boolean' },
+            limitations: { type: 'boolean' },
+            findings: { type: 'boolean' }
+          },
+          description: 'Sections to include in summary'
+        }
+      },
+      required: ['paper_path', 'theme']
+    }
   }
 ];
 
@@ -398,25 +478,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       savedFilePath = 'Failed to save result';
     }
 
+    console.error(`[DEBUG] Tool response prepared, returning response`);
+
+    // Return just the mock data directly
     return {
       content: [
         {
-          type: 'text',
-          text: `✅ Tool "${name}" executed successfully!\n\n**Description:** ${tool.description}\n\n**Arguments received:**\n\`\`\`json\n${JSON.stringify(args, null, 2)}\n\`\`\`\n\n**Result saved to:** ${savedFilePath}\n\n**Mock Result Preview:**\n\`\`\`json\n${JSON.stringify(mockResult.mockData, null, 2).slice(0, 500)}${JSON.stringify(mockResult.mockData, null, 2).length > 500 ? '...\n```\n\n*Full results saved to file*' : '\n```'}\n\n📝 **Note:** This is a mock implementation. Full functionality will be added progressively.`
+          type: 'text' as const,
+          text: `Tool executed: ${name}\n\nResults: ${JSON.stringify(mockResult.mockData, null, 2)}`
         }
       ]
     };
+
   } catch (error) {
     console.error(`[ERROR] Tool execution failed:`, error);
-    return {
+    const errorResponse = {
       content: [
         {
-          type: 'text',
-          text: `❌ Error executing tool: ${error instanceof Error ? error.message : 'Unknown error'}`
+          type: 'text' as const,
+          text: `Error executing tool: ${error instanceof Error ? error.message : 'Unknown error'}`
         }
       ],
       isError: true
     };
+
+    console.error(`[DEBUG] Error response prepared, returning error response`);
+    return errorResponse;
   }
 });
 
@@ -470,6 +557,90 @@ function generateMockData(toolName: string, args: any): any {
         format: args.format || 'markdown'
       };
 
+    case 'generate_presentation':
+      const slideCount = Math.floor((args.duration || 20) / 2); // ~2 minutes per slide
+      return {
+        presentationType: args.presentation_type,
+        title: `Literature Review Presentation: ${args.presentation_type}`,
+        duration: args.duration || 20,
+        audience: args.audience || 'academic',
+        format: args.format || 'powerpoint',
+        slideCount: slideCount,
+        sections: args.sections || ['Introduction', 'Methodology', 'Key Findings', 'Research Gaps', 'Conclusions'],
+        slides: Array.from({ length: slideCount }, (_, i) => ({
+          slideNumber: i + 1,
+          title: `Slide ${i + 1}`,
+          content: `Content for slide ${i + 1} in ${args.presentation_type} presentation`,
+          notes: `Speaker notes for slide ${i + 1}`,
+          visualElements: args.include_visuals ? [`Chart ${i + 1}`, `Figure ${i + 1}`] : []
+        })),
+        estimatedReadingTime: `${slideCount * 2} minutes`,
+        includeVisuals: args.include_visuals || false
+      };
+
+    case 'generate_paper_summary':
+      return {
+        paperPath: args.paper_path,
+        theme: args.theme,
+        format: args.output_format || 'markdown',
+        summary: {
+          evidence: {
+            paperTitle: 'Extracted from PDF: [Paper Title]',
+            authors: ['Author 1', 'Author 2'],
+            year: 2024,
+            keyPoints: [
+              'Main contribution or finding 1',
+              'Main contribution or finding 2',
+              'Methodological approach description'
+            ],
+            pageReferences: ['Pg. 83', 'Pg. 84']
+          },
+          toolsAndMethods: {
+            primary: [
+              {
+                name: 'Primary Method/Tool',
+                description: 'Detailed description of the method or tool used',
+                application: 'How it was applied in the study'
+              }
+            ],
+            secondary: [
+              {
+                name: 'Supporting Method/Tool',
+                description: 'Additional methods used',
+                application: 'Supporting role in the research'
+              }
+            ]
+          },
+          limitations: [
+            'Identified limitation 1',
+            'Identified limitation 2',
+            'Scope or methodological constraint'
+          ],
+          preliminaryFindings: {
+            theme: args.theme,
+            findings: [
+              'Key finding 1 with quantitative result',
+              'Key finding 2 with comparative analysis',
+              'Key finding 3 with practical implications'
+            ],
+            metrics: {
+              performanceIndicators: ['Metric 1', 'Metric 2'],
+              comparisons: ['Baseline vs proposed approach']
+            }
+          }
+        },
+        extractionMetadata: {
+          extractedAt: new Date().toISOString(),
+          focusAreas: args.focus_areas || ['methodology', 'results', 'limitations'],
+          sectionsIncluded: args.include_sections || {
+            evidence: true,
+            tools_and_methods: true,
+            limitations: true,
+            findings: true
+          }
+        }
+      };
+
     default:
       return {
         message: `Mock data for ${toolName}`,
@@ -501,6 +672,19 @@ async function saveToolResult(toolName: string, result: any): Promise<string> {
       return await outputManager.saveChapter(
         result.mockData,
         result.arguments.format || 'markdown'
+      );
+
+    case 'generate_presentation':
+      return await outputManager.savePresentation(
+        result.mockData,
+        result.arguments.format || 'powerpoint'
+      );
+
+    case 'generate_paper_summary':
+      return await outputManager.savePaperSummary(
+        result.mockData,
+        result.arguments.theme || 'general',
+        result.arguments.output_format || 'markdown'
       );
 
     case 'extract_methodologies':

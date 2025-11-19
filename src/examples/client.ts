@@ -157,6 +157,12 @@ class LiteratureReviewClient {
       
       // Check if we have PDFs to analyze
       try {
+        // First check if PDF directory exists
+        const stats = await fs.stat(PDF_DIR);
+        if (!stats.isDirectory()) {
+          throw new Error(`PDF_DIR is not a directory: ${PDF_DIR}`);
+        }
+
         const pdfFiles = await fs.readdir(PDF_DIR);
         const pdfPaths = pdfFiles
           .filter(f => f.endsWith('.pdf'))
@@ -173,7 +179,13 @@ class LiteratureReviewClient {
           console.log(`   No PDF files found in ${PDF_DIR} - skipping methodology extraction`);
         }
       } catch (error) {
-        console.log(`   PDF directory not found - skipping methodology extraction`);
+        if (error.code === 'ENOENT') {
+          console.log(`   PDF directory not found (${PDF_DIR}) - skipping methodology extraction`);
+        } else if (error.code === 'EISDIR') {
+          console.log(`   Directory read error (${PDF_DIR}) - skipping methodology extraction`);
+        } else {
+          console.log(`   Error accessing PDF directory: ${error.message} - skipping methodology extraction`);
+        }
       }
 
       // Step 6: Identify Research Gaps

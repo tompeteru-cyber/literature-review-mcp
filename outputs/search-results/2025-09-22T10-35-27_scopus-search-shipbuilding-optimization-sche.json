@@ -1,0 +1,125 @@
+{
+  "database": "Scopus",
+  "query": "shipbuilding optimization scheduling",
+  "timestamp": "2025-09-22T10:35:27.040Z",
+  "results": {
+    "databases": [
+      "Scopus",
+      "IEEE"
+    ],
+    "query": "shipbuilding optimization scheduling",
+    "totalResults": 262,
+    "papers": [
+      {
+        "id": "paper_1",
+        "title": "Mock Paper 1 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 1",
+          "Co-Author 1"
+        ],
+        "year": 2022,
+        "citations": 75,
+        "abstract": "This is a mock abstract for paper 1 related to the search query."
+      },
+      {
+        "id": "paper_2",
+        "title": "Mock Paper 2 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 2",
+          "Co-Author 2"
+        ],
+        "year": 2020,
+        "citations": 43,
+        "abstract": "This is a mock abstract for paper 2 related to the search query."
+      },
+      {
+        "id": "paper_3",
+        "title": "Mock Paper 3 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 3",
+          "Co-Author 3"
+        ],
+        "year": 2020,
+        "citations": 11,
+        "abstract": "This is a mock abstract for paper 3 related to the search query."
+      },
+      {
+        "id": "paper_4",
+        "title": "Mock Paper 4 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 4",
+          "Co-Author 4"
+        ],
+        "year": 2024,
+        "citations": 13,
+        "abstract": "This is a mock abstract for paper 4 related to the search query."
+      },
+      {
+        "id": "paper_5",
+        "title": "Mock Paper 5 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 5",
+          "Co-Author 5"
+        ],
+        "year": 2020,
+        "citations": 78,
+        "abstract": "This is a mock abstract for paper 5 related to the search query."
+      },
+      {
+        "id": "paper_6",
+        "title": "Mock Paper 6 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 6",
+          "Co-Author 6"
+        ],
+        "year": 2022,
+        "citations": 89,
+        "abstract": "This is a mock abstract for paper 6 related to the search query."
+      },
+      {
+        "id": "paper_7",
+        "title": "Mock Paper 7 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 7",
+          "Co-Author 7"
+        ],
+        "year": 2024,
+        "citations": 34,
+        "abstract": "This is a mock abstract for paper 7 related to the search query."
+      },
+      {
+        "id": "paper_8",
+        "title": "Mock Paper 8 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 8",
+          "Co-Author 8"
+        ],
+        "year": 2020,
+        "citations": 12,
+        "abstract": "This is a mock abstract for paper 8 related to the search query."
+      },
+      {
+        "id": "paper_9",
+        "title": "Mock Paper 9 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 9",
+          "Co-Author 9"
+        ],
+        "year": 2023,
+        "citations": 37,
+        "abstract": "This is a mock abstract for paper 9 related to the search query."
+      },
+      {
+        "id": "paper_10",
+        "title": "Mock Paper 10 related to \"shipbuilding optimization scheduling\"",
+        "authors": [
+          "Author 10",
+          "Co-Author 10"
+        ],
+        "year": 2020,
+        "citations": 85,
+        "abstract": "This is a mock abstract for paper 10 related to the search query."
+      }
+    ]
+  }
+}
