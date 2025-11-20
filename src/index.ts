@@ -362,7 +362,7 @@ const tools: Tool[] = [
   },
   {
     name: 'generate_paper_summary',
-    description: 'Generate structured summary from academic paper capturing unique methodologies, evidence, limitations, and findings. IMPORTANT: Accurately describe what THIS specific paper actually does - do not assume papers "combine" methods unless explicitly stated. Each paper has unique contributions.',
+    description: 'Generate structured summary from academic paper capturing unique methodologies, evidence, limitations, and findings. AUTOMATICALLY applies research context to identify: (1) Outfitting stage (Block vs Post-Launch), (2) Stage-specific limitations, (3) Transferability issues. IMPORTANT: Accurately describe what THIS specific paper actually does - do not assume papers "combine" methods unless explicitly stated. Each paper has unique contributions.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -390,12 +390,27 @@ const tools: Tool[] = [
             evidence: { type: 'boolean' },
             tools_and_methods: { type: 'boolean' },
             limitations: { type: 'boolean' },
-            findings: { type: 'boolean' }
+            findings: { type: 'boolean' },
+            outfitting_stage: { type: 'boolean', description: 'Include outfitting stage classification (Block/Post-Launch)' }
           },
           description: 'Sections to include in summary'
         }
       },
       required: ['paper_path', 'theme']
+    }
+  },
+  {
+    name: 'get_research_context',
+    description: 'Retrieve the research context including domain understanding, literature distribution, identified gaps, and analysis guidelines. Use this to understand the Block vs Post-Launch outfitting distinction and the 80/20 literature gap.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        context_type: {
+          type: 'string',
+          enum: ['full', 'domain', 'gaps', 'guidelines', 'distribution'],
+          description: 'Type of context to retrieve'
+        }
+      }
     }
   }
 ];
@@ -641,6 +656,132 @@ function generateMockData(toolName: string, args: any): any {
         }
       };
 
+    case 'get_research_context':
+      const contextType = args.context_type || 'full';
+      const contextData = {
+        researchTitle: 'Dynamic Digital Scheduling for Optimal Outfitting of Naval Ships',
+        phDCandidate: 'Tom Peter',
+
+        domainUnderstanding: {
+          blockOutfitting: {
+            description: 'Pre-launch shipyard environment with open spaces',
+            environment: 'Shipyard environment, assembly sites',
+            equipment: 'Platform vehicles, goliath cranes, moulding beds',
+            challenges: ['Inter-block coordination', 'Yard-level spatial constraints', 'Material handling bottlenecks', 'Parallel work streams optimisation']
+          },
+          postLaunchOutfitting: {
+            description: 'After launch confined vessel spaces',
+            environment: 'Confined spaces within launched vessel',
+            equipment: 'Thousands of equipment items in confined space',
+            challenges: ['Limited access routes and narrow hatches', 'Multiple trade coordination through access points', 'Rework from design changes', 'Safety-integrated task sequencing']
+          },
+          criticalInsight: 'Block and Post-Launch outfitting are FUNDAMENTALLY DIFFERENT operational problems. Methods designed for one domain cannot be directly transferred to the other.'
+        },
+
+        literatureDistribution: {
+          totalPapers: 210,
+          blockOutfitting: { count: 168, percentage: 80 },
+          postLaunchOutfitting: { count: 42, percentage: 20 },
+          majorGap: 'Overwhelming focus on block outfitting reveals significant research gap in post-launch outfitting scheduling methodologies'
+        },
+
+        identifiedGaps: {
+          theoretical: {
+            title: 'Integrated Framework Absence',
+            description: 'No unified framework addressing spatial constraints, resource uncertainty, and safety requirements together'
+          },
+          methodological: {
+            title: 'Implementation Disconnect',
+            description: 'Methods fail to translate safety and uncertainty constraints into algorithm implementation. Block vs post-launch distinction often ignored.',
+            limitation: 'Most papers claim general "outfitting" applicability without acknowledging fundamental operational differences'
+          },
+          practical: {
+            title: 'Validation and Application Gap',
+            description: 'Missing full-scale shipyard validation. Post-launch compartment-level scheduling severely underserved.'
+          }
+        },
+
+        researchDirections: {
+          option1: {
+            title: 'Pure Post-Launch Focus (Preferred)',
+            focus: 'Compartment scheduling for confined spaces',
+            rationale: ['Addresses 80/20 imbalance', 'Novel contribution to under-researched area', 'Directly applicable to naval shipbuilding completion phase', 'Unique constraints not addressed elsewhere']
+          },
+          option2: {
+            title: 'Integrated Approach',
+            focus: 'Block to vessel transition',
+            rationale: ['Bridges pre-launch and post-launch phases', 'More complex scope', 'May dilute focus on primary gap']
+          }
+        },
+
+        analysisGuidelines: {
+          alwaysIdentify: [
+            'Outfitting stage classification (Block/Post-Launch/Both/Not specified)',
+            'Stage-specific limitations',
+            'Transferability claims and their validity',
+            'Evidence markers for each stage'
+          ],
+          blockOutfittingMarkers: ['block assembly', 'yard', 'assembly site', 'platform vehicle', 'goliath crane', 'pre-outfitting', 'on-unit', 'on-block'],
+          postLaunchMarkers: ['compartment', 'confined space', 'hatch', 'access route', 'multi-trade coordination', 'on-board', 'launched vessel', 'fitting-out basin'],
+          standardLimitationTemplate: 'Block outfitting focus limits post-launch applicability: Methods address yard-level spatial constraints (large blocks, platform vehicles, assembly sites) which are fundamentally different from post-launch compartmentation constraints (confined spaces, narrow hatches, multi-trade coordination through access points). Transferability to post-launch outfitting requires significant methodological adaptation not addressed in this work.'
+        },
+
+        themes: [
+          {
+            id: 1,
+            name: 'Spatial Optimisation and Outfitting Constraints',
+            finding: 'MILP and rule-based models address spatial layout and sequencing WITHOUT spatial-temporal adaptation in outfitting',
+            limitation: 'Static optimization, yard-level focus, not process-aware schedulers'
+          },
+          {
+            id: 2,
+            name: 'Dynamic Resource Scheduling and Uncertainty',
+            finding: 'DES and CONWIP models simulate flexible production but LACK spatial reasoning or adaptive outfitting',
+            limitation: 'Fixed sequential processes, no real-time replanning'
+          },
+          {
+            id: 3,
+            name: 'Safety Integrated Dynamic Scheduling',
+            finding: 'Safety and quality methods use probabilistic and laser-based tools but LACK integration with dynamic scheduling',
+            limitation: 'Risk assessment without rescheduling capability'
+          },
+          {
+            id: 4,
+            name: 'Multi-stage Assembly and Outfitting Optimisation',
+            finding: '3D CAD-linked AI and rule-based systems optimise assembly planning but LACK feedback integration from outfitting execution',
+            limitation: 'Static planning, no real-time monitoring, isolated block planning'
+          },
+          {
+            id: 5,
+            name: 'Digital Scheduling and Dynamic Optimisation',
+            finding: 'Digital platforms synchronise enterprise data but DON\'T directly drive real-time outfitting rescheduling',
+            limitation: 'Implementation complexity, legacy integration challenges, design-reality gap'
+          }
+        ],
+
+        papersAnalyzed: {
+          total: 9,
+          blockOutfitting: 9,
+          postLaunch: 0,
+          pattern: '9/9 papers (100%) are Block Outfitting - validating the 80/20 literature distribution'
+        }
+      };
+
+      // Return filtered context based on type
+      switch (contextType) {
+        case 'domain':
+          return { domainUnderstanding: contextData.domainUnderstanding };
+        case 'gaps':
+          return { identifiedGaps: contextData.identifiedGaps, researchDirections: contextData.researchDirections };
+        case 'guidelines':
+          return { analysisGuidelines: contextData.analysisGuidelines };
+        case 'distribution':
+          return { literatureDistribution: contextData.literatureDistribution, papersAnalyzed: contextData.papersAnalyzed };
+        case 'full':
+        default:
+          return contextData;
+      }
+
     default:
       return {
         message: `Mock data for ${toolName}`,
@@ -698,6 +839,13 @@ async function saveToolResult(toolName: string, result: any): Promise<string> {
 
     case 'trend_analysis':
       return await outputManager.saveTrendAnalysis(result.mockData);
+
+    case 'get_research_context':
+      return await outputManager.saveReport(
+        'research-context',
+        result.mockData,
+        'json'
+      );
 
     default:
       return await outputManager.saveReport(
