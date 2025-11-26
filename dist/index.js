@@ -685,34 +685,45 @@ function generateMockData(toolName, args) {
                     postLaunchMarkers: ['compartment', 'confined space', 'hatch', 'access route', 'multi-trade coordination', 'on-board', 'launched vessel', 'fitting-out basin'],
                     standardLimitationTemplate: 'Block outfitting focus limits post-launch applicability: Methods address yard-level spatial constraints (large blocks, platform vehicles, assembly sites) which are fundamentally different from post-launch compartmentation constraints (confined spaces, narrow hatches, multi-trade coordination through access points). Transferability to post-launch outfitting requires significant methodological adaptation not addressed in this work.'
                 },
+                // Thematic sections: 2.2-2.6 (~1800 words each)
                 themes: [
                     {
                         id: 1,
-                        name: 'Spatial Optimisation and Outfitting Constraints',
+                        section: '2.2',
+                        name: 'Spatial Optimisation & Outfitting Constraints',
+                        targetWords: 1800,
                         finding: 'MILP and rule-based models address spatial layout and sequencing WITHOUT spatial-temporal adaptation in outfitting',
                         limitation: 'Static optimization, yard-level focus, not process-aware schedulers'
                     },
                     {
                         id: 2,
-                        name: 'Dynamic Resource Scheduling and Uncertainty',
+                        section: '2.3',
+                        name: 'Dynamic Resource Scheduling & Uncertainty',
+                        targetWords: 1800,
                         finding: 'DES and CONWIP models simulate flexible production but LACK spatial reasoning or adaptive outfitting',
                         limitation: 'Fixed sequential processes, no real-time replanning'
                     },
                     {
                         id: 3,
+                        section: '2.4',
                         name: 'Safety Integrated Dynamic Scheduling',
+                        targetWords: 1800,
                         finding: 'Safety and quality methods use probabilistic and laser-based tools but LACK integration with dynamic scheduling',
                         limitation: 'Risk assessment without rescheduling capability'
                     },
                     {
                         id: 4,
-                        name: 'Multi-stage Assembly and Outfitting Optimisation',
+                        section: '2.5',
+                        name: 'Multi-Stage Assembly & Outfitting Optimisation',
+                        targetWords: 1800,
                         finding: '3D CAD-linked AI and rule-based systems optimise assembly planning but LACK feedback integration from outfitting execution',
                         limitation: 'Static planning, no real-time monitoring, isolated block planning'
                     },
                     {
                         id: 5,
-                        name: 'Digital Scheduling and Dynamic Optimisation',
+                        section: '2.6',
+                        name: 'Digital Scheduling & Dynamic Optimisation',
+                        targetWords: 1800,
                         finding: 'Digital platforms synchronise enterprise data but DON\'T directly drive real-time outfitting rescheduling',
                         limitation: 'Implementation complexity, legacy integration challenges, design-reality gap'
                     }

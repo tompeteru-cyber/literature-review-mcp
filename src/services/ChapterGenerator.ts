@@ -36,17 +36,30 @@ export class ChapterGenerator {
     this.format = format;
     this.citationStyle = citationStyle;
 
-    // Default sections if not specified
+    // Default sections based on Literature Review Section Breakdown
+    // Word counts are indicative targets, not strict limits
     const sections = chapterSections || [
-      '1.1. Chapter Overview',
-      '1.2. Database Selection and Search Strategy',
-      '1.3. Tier 1: Initial Filtering Framework',
-      '1.4. Tier 2: Advanced Relevance Analysis',
-      '1.5. Tier 3: AHP-Based Multi-criteria Decision Framework',
-      '1.6. Methodological Validation & Contribution',
-      '1.7. State of the Knowledge',
-      '1.8. Research Gaps',
-      '1.9. Chapter Summary'
+      // Methodology Section (6450 words total)
+      '2.1. Chapter Overview',                                    // 350 words
+      '2.1.1. Theoretical Foundation of the PETRA Framework',     // 450 words
+      '2.1.2. Database Selection and Search Strategy',            // 650 words
+      '2.1.3. Tier 1: Initial Filtering Framework',               // 1000 words
+      '2.1.4. Tier 2: Advanced Relevance Analysis',               // 1300 words
+      '2.1.5. Tier 3: AHP-Based Multi-criteria Decision Framework', // 1700 words
+      '2.1.6. Methodological Validation & Contribution',          // 1000 words
+      // Thematic Sections (9000 words total, ~1800 each)
+      '2.2. Spatial Optimisation & Outfitting Constraints',       // 1800 words
+      '2.3. Dynamic Resource Scheduling & Uncertainty',           // 1800 words
+      '2.4. Safety Integrated Dynamic Scheduling',                // 1800 words
+      '2.5. Multi-Stage Assembly & Outfitting Optimisation',      // 1800 words
+      '2.6. Digital Scheduling & Dynamic Optimisation',           // 1800 words
+      // Gap Analysis Section (3350 words total)
+      '2.7. Research Gaps',                                       // 350 words overview
+      '2.7.1. Theoretical Gap',                                   // 1000 words
+      '2.7.2. Methodological Gap',                                // 1000 words
+      '2.7.3. Practical Gap',                                     // 1000 words
+      // Conclusion Section (1200 words)
+      '2.8. Conclusion'                                           // 1200 words
     ];
 
     // Generate chapter structure
@@ -463,33 +476,34 @@ The validation confirms the framework's robustness and reliability for systemati
     
     const overview = `The synthesis of ${analysisResults.papers?.length || 0} papers reveals a complex and evolving research landscape. This section presents the current state of knowledge organized by key thematic areas.`;
 
+    // Legacy subsections - in new structure, thematic sections are main sections 2.2-2.6
     const subsections: ChapterSection[] = [
       {
-        number: '1.7.1',
+        number: '2.2',
         title: 'Spatial Optimisation & Outfitting Constraints',
         content: this.generateThematicContent('spatial_optimisation', themes, analysisResults),
         subsections: []
       },
       {
-        number: '1.7.2',
+        number: '2.3',
         title: 'Dynamic Resource Scheduling & Uncertainty',
         content: this.generateThematicContent('resource_scheduling', themes, analysisResults),
         subsections: []
       },
       {
-        number: '1.7.3',
+        number: '2.4',
         title: 'Safety Integrated Dynamic Scheduling',
         content: this.generateThematicContent('safety_scheduling', themes, analysisResults),
         subsections: []
       },
       {
-        number: '1.7.4',
+        number: '2.5',
         title: 'Multi-Stage Assembly & Outfitting Optimisation',
         content: this.generateThematicContent('assembly_optimisation', themes, analysisResults),
         subsections: []
       },
       {
-        number: '1.7.5',
+        number: '2.6',
         title: 'Digital Scheduling & Dynamic Optimisation',
         content: this.generateThematicContent('digital_scheduling', themes, analysisResults),
         subsections: []
@@ -512,20 +526,20 @@ The validation confirms the framework's robustness and reliability for systemati
 
     const subsections: ChapterSection[] = [
       {
-        number: '1.8.1',
-        title: 'Theoretical Gaps',
+        number: '2.7.1',
+        title: 'Theoretical Gap',
         content: this.generateGapContent('theoretical', gaps.theoretical_gaps || [], analysisResults),
         subsections: []
       },
       {
-        number: '1.8.2',
-        title: 'Methodological Gaps',
+        number: '2.7.2',
+        title: 'Methodological Gap',
         content: this.generateGapContent('methodological', gaps.methodological_gaps || [], analysisResults),
         subsections: []
       },
       {
-        number: '1.8.3',
-        title: 'Practical Gaps',
+        number: '2.7.3',
+        title: 'Practical Gap',
         content: this.generateGapContent('practical', gaps.practical_gaps || [], analysisResults),
         subsections: []
       }
@@ -585,7 +599,7 @@ The identified research gaps and opportunities provide clear directions for adva
 
   // Format conversion methods
   private async generateMarkdown(structure: ChapterSection[]): Promise<string> {
-    let markdown = '# CHAPTER 1. Literature Review\n\n';
+    let markdown = '# CHAPTER 2. Literature Review\n\n';
     
     for (const section of structure) {
       markdown += `## ${section.number} ${section.title}\n\n`;
@@ -624,7 +638,7 @@ The identified research gaps and opportunities provide clear directions for adva
     let html = `<!DOCTYPE html>
 <html>
 <head>
-    <title>Chapter 1: Literature Review</title>
+    <title>Chapter 2: Literature Review</title>
     <style>
         body { font-family: 'Times New Roman', serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
         h1 { font-size: 24px; }
@@ -636,7 +650,7 @@ The identified research gaps and opportunities provide clear directions for adva
     </style>
 </head>
 <body>
-    <h1>CHAPTER 1. Literature Review</h1>\n`;
+    <h1>CHAPTER 2. Literature Review</h1>\n`;
     
     for (const section of structure) {
       html += `    <h2>${section.number} ${section.title}</h2>\n`;
@@ -659,7 +673,7 @@ The identified research gaps and opportunities provide clear directions for adva
     // For now, returning a structured format that could be converted
     return JSON.stringify({
       type: 'docx',
-      title: 'Chapter 1: Literature Review',
+      title: 'Chapter 2: Literature Review',
       sections: structure
     }, null, 2);
   }
