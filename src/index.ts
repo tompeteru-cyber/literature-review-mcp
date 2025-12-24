@@ -7,6 +7,7 @@ import {
   InitializeRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { OutputManager } from './utils/OutputManager.js';
+import { getResearchContextLoader } from './utils/ResearchContextLoader.js';
 import path from 'path';
 
 // Global error handling
@@ -475,13 +476,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     console.error(`[DEBUG] Executing tool: ${name} with args:`, JSON.stringify(args));
 
     // Generate mock data and save to organized output structure
+    const mockData = await generateMockData(name, args);
     const mockResult = {
       tool: name,
       description: tool.description,
       arguments: args,
       timestamp: new Date().toISOString(),
       status: 'success',
-      mockData: generateMockData(name, args)
+      mockData: mockData
     };
 
     // Save result to appropriate output directory
@@ -523,7 +525,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 // Helper function to generate mock data based on tool type
-function generateMockData(toolName: string, args: any): any {
+async function generateMockData(toolName: string, args: any): Promise<any> {
   switch (toolName) {
     case 'search_databases':
       return {
@@ -657,140 +659,26 @@ function generateMockData(toolName: string, args: any): any {
       };
 
     case 'get_research_context':
-      const contextType = args.context_type || 'full';
-      const contextData = {
-        researchTitle: 'Dynamic Digital Scheduling for Optimal Outfitting of Naval Ships',
-        phDCandidate: 'Tom Peter',
+      // Dynamically load research context from research-context.md file
+      const contextLoader = getResearchContextLoader(path.join(process.cwd(), 'research-context.md'));
+      const requestedContextType = args.context_type || 'full';
 
-        domainUnderstanding: {
-          blockOutfitting: {
-            description: 'Pre-launch shipyard environment with open spaces',
-            environment: 'Shipyard environment, assembly sites',
-            equipment: 'Platform vehicles, goliath cranes, moulding beds',
-            challenges: ['Inter-block coordination', 'Yard-level spatial constraints', 'Material handling bottlenecks', 'Parallel work streams optimisation']
-          },
-          postLaunchOutfitting: {
-            description: 'After launch confined vessel spaces',
-            environment: 'Confined spaces within launched vessel',
-            equipment: 'Thousands of equipment items in confined space',
-            challenges: ['Limited access routes and narrow hatches', 'Multiple trade coordination through access points', 'Rework from design changes', 'Safety-integrated task sequencing']
-          },
-          criticalInsight: 'Block and Post-Launch outfitting are FUNDAMENTALLY DIFFERENT operational problems. Methods designed for one domain cannot be directly transferred to the other.'
-        },
-
-        literatureDistribution: {
-          totalPapers: 210,
-          blockOutfitting: { count: 168, percentage: 80 },
-          postLaunchOutfitting: { count: 42, percentage: 20 },
-          majorGap: 'Overwhelming focus on block outfitting reveals significant research gap in post-launch outfitting scheduling methodologies'
-        },
-
-        identifiedGaps: {
-          theoretical: {
-            title: 'Integrated Framework Absence',
-            description: 'No unified framework addressing spatial constraints, resource uncertainty, and safety requirements together'
-          },
-          methodological: {
-            title: 'Implementation Disconnect',
-            description: 'Methods fail to translate safety and uncertainty constraints into algorithm implementation. Block vs post-launch distinction often ignored.',
-            limitation: 'Most papers claim general "outfitting" applicability without acknowledging fundamental operational differences'
-          },
-          practical: {
-            title: 'Validation and Application Gap',
-            description: 'Missing full-scale shipyard validation. Post-launch compartment-level scheduling severely underserved.'
-          }
-        },
-
-        researchDirections: {
-          option1: {
-            title: 'Pure Post-Launch Focus (Preferred)',
-            focus: 'Compartment scheduling for confined spaces',
-            rationale: ['Addresses 80/20 imbalance', 'Novel contribution to under-researched area', 'Directly applicable to naval shipbuilding completion phase', 'Unique constraints not addressed elsewhere']
-          },
-          option2: {
-            title: 'Integrated Approach',
-            focus: 'Block to vessel transition',
-            rationale: ['Bridges pre-launch and post-launch phases', 'More complex scope', 'May dilute focus on primary gap']
-          }
-        },
-
-        analysisGuidelines: {
-          alwaysIdentify: [
-            'Outfitting stage classification (Block/Post-Launch/Both/Not specified)',
-            'Stage-specific limitations',
-            'Transferability claims and their validity',
-            'Evidence markers for each stage'
-          ],
-          blockOutfittingMarkers: ['block assembly', 'yard', 'assembly site', 'platform vehicle', 'goliath crane', 'pre-outfitting', 'on-unit', 'on-block'],
-          postLaunchMarkers: ['compartment', 'confined space', 'hatch', 'access route', 'multi-trade coordination', 'on-board', 'launched vessel', 'fitting-out basin'],
-          standardLimitationTemplate: 'Block outfitting focus limits post-launch applicability: Methods address yard-level spatial constraints (large blocks, platform vehicles, assembly sites) which are fundamentally different from post-launch compartmentation constraints (confined spaces, narrow hatches, multi-trade coordination through access points). Transferability to post-launch outfitting requires significant methodological adaptation not addressed in this work.'
-        },
-
-        // Thematic sections: 2.2-2.6 (~1800 words each)
-        themes: [
-          {
-            id: 1,
-            section: '2.2',
-            name: 'Spatial Optimisation & Outfitting Constraints',
-            targetWords: 1800,
-            finding: 'MILP and rule-based models address spatial layout and sequencing WITHOUT spatial-temporal adaptation in outfitting',
-            limitation: 'Static optimization, yard-level focus, not process-aware schedulers'
-          },
-          {
-            id: 2,
-            section: '2.3',
-            name: 'Dynamic Resource Scheduling & Uncertainty',
-            targetWords: 1800,
-            finding: 'DES and CONWIP models simulate flexible production but LACK spatial reasoning or adaptive outfitting',
-            limitation: 'Fixed sequential processes, no real-time replanning'
-          },
-          {
-            id: 3,
-            section: '2.4',
-            name: 'Safety Integrated Dynamic Scheduling',
-            targetWords: 1800,
-            finding: 'Safety and quality methods use probabilistic and laser-based tools but LACK integration with dynamic scheduling',
-            limitation: 'Risk assessment without rescheduling capability'
-          },
-          {
-            id: 4,
-            section: '2.5',
-            name: 'Multi-Stage Assembly & Outfitting Optimisation',
-            targetWords: 1800,
-            finding: '3D CAD-linked AI and rule-based systems optimise assembly planning but LACK feedback integration from outfitting execution',
-            limitation: 'Static planning, no real-time monitoring, isolated block planning'
-          },
-          {
-            id: 5,
-            section: '2.6',
-            name: 'Digital Scheduling & Dynamic Optimisation',
-            targetWords: 1800,
-            finding: 'Digital platforms synchronise enterprise data but DON\'T directly drive real-time outfitting rescheduling',
-            limitation: 'Implementation complexity, legacy integration challenges, design-reality gap'
-          }
-        ],
-
-        papersAnalyzed: {
-          total: 9,
-          blockOutfitting: 9,
-          postLaunch: 0,
-          pattern: '9/9 papers (100%) are Block Outfitting - validating the 80/20 literature distribution'
-        }
-      };
-
-      // Return filtered context based on type
-      switch (contextType) {
-        case 'domain':
-          return { domainUnderstanding: contextData.domainUnderstanding };
-        case 'gaps':
-          return { identifiedGaps: contextData.identifiedGaps, researchDirections: contextData.researchDirections };
-        case 'guidelines':
-          return { analysisGuidelines: contextData.analysisGuidelines };
-        case 'distribution':
-          return { literatureDistribution: contextData.literatureDistribution, papersAnalyzed: contextData.papersAnalyzed };
-        case 'full':
-        default:
-          return contextData;
+      try {
+        const dynamicContext = await contextLoader.getFilteredContext(requestedContextType);
+        return {
+          source: 'research-context.md',
+          loadedAt: new Date().toISOString(),
+          contextType: requestedContextType,
+          ...dynamicContext
+        };
+      } catch (error) {
+        console.error('[ERROR] Failed to load research context:', error);
+        // Fallback to indicate error
+        return {
+          error: 'Failed to load research context from file',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          suggestion: 'Ensure research-context.md exists in the project root'
+        };
       }
 
     default:
