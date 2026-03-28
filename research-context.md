@@ -3,7 +3,7 @@
 **PhD Candidate:** Tom Peter
 **Supervisor:** Dr Ian Whitfield (University of Strathclyde)
 **Industry Partner:** Dr Nabile Hifi (Shipyard)
-**Last Updated:** November 2025
+**Last Updated:** March 2026
 
 ---
 
@@ -100,9 +100,26 @@ The overwhelming focus on block outfitting reveals a significant research gap in
 
 ## Theme Classification (5 Themes Identified)
 
-### Theme 1: Spatial Optimisation and Outfitting Constraints
-- **Finding:** MILP and rule-based models address spatial layout and sequencing WITHOUT spatial-temporal adaptation in outfitting
-- **Limitation:** Static optimization, yard-level focus, not process-aware schedulers
+### Theme 1: Spatial Optimisation and Outfitting Constraints (Section 2.2)
+- **Verified Papers:** 40 (from Table_2.1_Final_Unified.xlsx)
+- **Outfitting Phase Breakdown:** 37 Pre-launch | 2 Post-launch | 1 N/A (facility layout)
+- **Post-launch papers:** Jung, Jo, Lee (2008) - Quayside; Rose, Coenen (2015) - On-board outfitting
+- **NOT IN COLLECTION (excluded from table):** Lee, Lee, Choi (1996); Caprace et al. (2013)
+- **Solution Approach Distribution:** Hybrid (16), Metaheuristic (7), Exact (6), Heuristic (5), DSS (3), ML/AI (3)
+
+#### Section 2.2 Subsection Structure (Thematic, following Whitfield 2003 / Li, Zhang, Bai 2025 style):
+- **2.2.1 Introduction** - Spatiotemporal coupling, scale of modern modular construction, scope statement, justification for reviewing pre-launch literature (integrated into paragraph 4)
+- **2.2.2 Spatial Representation and Problem Formulation** - How researchers model the spatial dimension: configuration space (polygon), rectangular bin packing, 3D bin packing (x-y-time), buffer/abstract capacity, grid/cellular automata, graph-based models. Evolution from 2D to 3D to emergent paradigms
+- **2.2.3 Computational Tractability and Solution Scalability** - The central tension: MILP fails at 20 blocks, CP extends to 50, heuristics handle 1,000+, ML/AI adapts online. Methodological progression driven by scale requirements
+- **2.2.4 Industrial Deployment and Practical Requirements** - Deployed systems (HYPOS at Hyundai, DSME interactive), simulation-based approaches at real shipyards, tension between academic optimality and industrial usability, storage yard management
+- **2.2.5 Outfitting Phase Coverage and the Post-Launch Gap** - Critical analysis: 37/40 pre-launch, qualitative differences in post-launch constraints (access, compartment geometry, heterogeneous equipment), significance of the gap, justification for reviewing pre-launch literature reinforced
+- **2.2.6 Synthesis** - Coherent progression from exact to learning-based, consistent assumption of bounded open surface, transferability question, research gap motivation
+- **NOTE:** Dynamic scheduling content (formerly 2.2.5) was removed as it repeated papers already covered in 2.2.2-2.2.4 without adding a distinct analytical lens. Dynamic/stochastic aspects are noted where relevant within 2.2.3 (ML/AI methods) and 2.2.6 (synthesis)
+- **Table 2.1** - 40 verified papers, 12 columns including Solution Approach AND Specific Method
+
+- **Key Finding:** MILP and rule-based models address spatial layout and sequencing WITHOUT spatial-temporal adaptation in outfitting
+- **Key Limitation:** Static optimization, yard-level focus, not process-aware schedulers
+- **Critical Gap:** 37 of 40 papers address pre-launch stages only; post-launch compartment scheduling virtually unexplored
 
 ### Theme 2: Dynamic Resource Scheduling and Uncertainty
 - **Finding:** DES and CONWIP models simulate flexible production but LACK spatial reasoning or adaptive outfitting
@@ -186,15 +203,16 @@ The overwhelming focus on block outfitting reveals a significant research gap in
 3. Paper 10 - [Title TBD] - **Block Outfitting**
 4. Paper 13 - Improved spatial scheduling algorithm (Koh et al. 2008) - **Block Outfitting**
 5. Paper 17 - Scheduling for assembly sites (Sikorra et al. 2015) - **Block Outfitting**
-6. Paper 18 - Generating heuristic rule for quay assignment (Jung et al. 2008) - **Block Outfitting**
+6. Paper 18 - Generating heuristic rule for quay assignment (Jung et al. 2008) - **Post-Launch Outfitting (Quayside)**
 7. Paper 12 - Spatial scheduling based on rules (Hu et al. 2018) - **Block Outfitting**
 8. Paper 23 - Multi-objective spatial scheduling (Zheng et al. 2008) - **Block Outfitting**
 9. Paper 32 - Improved spatial scheduling for sub-assembly (Wang et al. 2023) - **Block Outfitting**
 
-**Pattern:** 9/9 papers analyzed are Block Outfitting (100%) - validating the 80/20 literature distribution
+**Pattern:** 8/9 papers are Block Outfitting, 1/9 is Post-Launch (Jung et al. 2008 - Quayside)
 
 ### Post-Launch Papers Identified:
-- [To be populated as discovered]
+- Paper 18 - Jung, Jo, Lee (2008) - Quayside assignment - **Post-Launch**
+- Paper 73 - Rose, Coenen (2015) - On-board outfitting, compartment graph - **Post-Launch**
 
 ---
 
